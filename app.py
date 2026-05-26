@@ -10,6 +10,10 @@ from datetime import datetime, timedelta
 from functools import wraps
 import threading
 import re
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
@@ -17,11 +21,12 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'training.db')
 
 # ===== LLM =====
-LLM_BASE = "http://113.45.39.247:3001/v1/chat/completions"
-LLM_KEY = "sk-67xkhoaVlLVE2rFAQmRVq7SrfuuMk7wAnCEvfRHFRq3UTreN"
-LLM_MODEL = "deepseek/deepseek-v4-flash"
+LLM_BASE = os.getenv('LLM_BASE', 'http://113.45.39.247:3001/v1/chat/completions')
+LLM_KEY = os.getenv('LLM_KEY', '')
+LLM_MODEL = os.getenv('LLM_MODEL', 'deepseek/deepseek-v4-flash')
 
-ADMIN_USERNAME = "admin"
+ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
 # ============ DB ============
 
@@ -386,12 +391,11 @@ def delete_plan(plan_id, **kwargs):
     return jsonify({'success': True})
 
 @app.route('/api/templates', methods=['GET'])
-@require_auth
-def get_templates(**kwargs):
+def get_templates():
     db = get_db()
-    templates = db.execute('SELECT id, title, sport_type, total_days, description FROM templates').fetchall()
+    templates = db.execute('SELECT id, title, sport_type, total_days, description, days_json FROM templates').fetchall()
     db.close()
-    return jsonify([dict(t) for t in templates])
+    return jsonify({'templates': [dict(t) for t in templates]})
 
 @app.route('/api/plans/from-template', methods=['POST'])
 @require_auth
@@ -609,6 +613,10 @@ def generate_plan_json_async(user_id, session_id, message_id, full_text):
             
     except Exception as e:
         print(f"[ERROR] 生成计划JSON失败: {str(e)}")
+        print(f"[ERROR] 错误类型: {type(e).__name__}")
+        print(f"[ERROR] 详细信息: {repr(e)}")
+        import traceback
+        print(f"[ERROR] 堆栈跟踪:\n{traceback.format_exc()}")
         # 标记为失败
         try:
             db = get_db()

@@ -27,6 +27,8 @@
         .typing-dot { width: 8px; height: 8px; border-radius: 50%; background: #667eea; display: inline-block; animation: pulse-dot 1.4s infinite ease-in-out; }
         .typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .spin-icon { animation: spin 2s linear infinite; display: inline-block; }
     </style>
 </head>
 <body>
@@ -170,7 +172,7 @@ window.addEventListener("unhandledrejection", function(e) {
 
             <!-- Chat Tab -->
             <div v-if="currentTab==='chat'">
-                <div class="bg-white rounded-xl card-shadow overflow-hidden flex flex-col" style="height: calc(100vh - 200px);">
+                <div class="bg-white rounded-xl card-shadow overflow-hidden flex flex-col" style="height: calc(100vh - 140px);">
                     <!-- Chat Messages -->
                     <div ref="chatBox" class="flex-1 overflow-y-auto p-4 space-y-4">
                         <div v-if="chatMessages.length===0" class="text-center py-8 text-gray-400">
@@ -181,6 +183,7 @@ window.addEventListener("unhandledrejection", function(e) {
                         <div v-for="(msg, idx) in chatMessages" :key="idx" :class="msg.role==='user'?'flex justify-end':'flex justify-start'">
                             <div class="chat-bubble rounded-2xl px-4 py-2.5" :class="msg.role==='user'?'bg-gradient-to-r from-purple-500 to-blue-500 text-white':'bg-gray-100 text-gray-800'">
                                 <div v-if="msg.role==='assistant'" v-html="renderMarkdown(msg.content)"></div>
+                                <div v-else-if="msg.role==='system'" v-html="msg.content"></div>
                                 <div v-else class="whitespace-pre-wrap">{{ msg.content }}</div>
                             </div>
                         </div>
@@ -220,18 +223,55 @@ window.addEventListener("unhandledrejection", function(e) {
 
             <!-- Templates Tab -->
             <div v-if="currentTab==='templates'">
-                <div v-for="tpl in templates" :key="tpl.id" class="bg-white rounded-xl card-shadow p-4 mb-3">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="font-bold text-gray-800">{{ tpl.title }}</h3>
-                            <p class="text-sm text-gray-500 mt-1">{{ tpl.sport_type }} · {{ tpl.total_days }}天</p>
-                            <p class="text-xs text-gray-400 mt-1">{{ tpl.description }}</p>
+                <!-- Template List -->
+                <div v-if="!selectedTemplate">
+                    <div v-for="tpl in templates" :key="tpl.id" class="bg-white rounded-xl card-shadow p-4 mb-3 cursor-pointer hover:shadow-lg transition-shadow" @click="showTemplateDetail(tpl)">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <h3 class="font-bold text-gray-800">{{ tpl.title }}</h3>
+                                <p class="text-sm text-gray-500 mt-1">{{ tpl.sport_type }} · {{ tpl.total_days }}天</p>
+                                <p class="text-xs text-gray-400 mt-1">{{ tpl.description }}</p>
+                            </div>
+                            <button @click.stop="useTemplate(tpl)" class="px-4 py-1.5 text-sm rounded-lg border border-purple-300 text-purple-600 hover:bg-purple-50 whitespace-nowrap flex-shrink-0 ml-3">使用</button>
                         </div>
-                        <button @click="useTemplate(tpl)" class="px-3 py-1.5 text-sm rounded-lg border border-purple-300 text-purple-600 hover:bg-purple-50">使用</button>
+                    </div>
+                    <div v-if="templates.length===0" class="text-center py-12 text-gray-400">
+                        <p>暂无模板</p>
                     </div>
                 </div>
-                <div v-if="templates.length===0" class="text-center py-12 text-gray-400">
-                    <p>暂无模板</p>
+
+                <!-- Template Detail -->
+                <div v-else>
+                    <div class="flex items-center mb-4">
+                        <button @click="selectedTemplate=null;expandedTemplateDay=null" class="mr-3 text-gray-500 hover:text-gray-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+                        <div class="flex-1">
+                            <h2 class="font-bold text-lg">{{ selectedTemplate.title }}</h2>
+                            <p class="text-sm text-gray-500">{{ selectedTemplate.sport_type }} · {{ selectedTemplate.total_days }}天</p>
+                        </div>
+                        <button @click="useTemplate(selectedTemplate)" class="text-purple-600 hover:text-purple-700 text-sm font-medium">使用模版</button>
+                    </div>
+                    <p v-if="selectedTemplate.description" class="text-sm text-gray-600 mb-4 px-1">{{ selectedTemplate.description }}</p>
+                    <div v-for="day in parseTemplateDays(selectedTemplate)" :key="day.day" class="bg-white rounded-xl card-shadow mb-3 overflow-hidden">
+                        <div class="p-4 cursor-pointer" @click="toggleTemplateDay(day.day)">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold bg-gray-100 text-gray-500">
+                                        {{ day.day }}
+                                    </div>
+                                    <div>
+                                        <span class="font-medium text-gray-800">Day {{ day.day }}</span>
+                                        <span v-if="day.title" class="ml-2 text-xs px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full">{{ day.title }}</span>
+                                    </div>
+                                </div>
+                                <svg class="w-4 h-4 text-gray-400 transition-transform" :class="{'rotate-180': expandedTemplateDay===day.day}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                        </div>
+                        <div v-show="expandedTemplateDay===day.day" class="px-4 pb-4 border-t">
+                            <div class="text-sm text-gray-600 whitespace-pre-line mt-3">{{ day.content }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -296,6 +336,8 @@ createApp({
 
         // Templates
         const templates = ref([]);
+        const selectedTemplate = ref(null);
+        const expandedTemplateDay = ref(null);
 
         // Settings
         const pwForm = reactive({ oldPw: '', newPw: '' });
@@ -484,15 +526,32 @@ createApp({
 
         // 轮询检查计划JSON是否生成完成
         let pollInterval = null;
+        let pollTimerInterval = null;
+        const pollTimer = ref(0);
+        const systemMessageIndex = ref(-1); // 记录系统提示消息的索引
+        
         const startPlanPolling = () => {
             let pollCount = 0;
-            const maxPolls = 60; // 最多轮询60次（60秒）
+            const maxPolls = 150; // 最多轮询150次（150秒，给后端足够时间）
             
-            // 显示提示信息
+            // 显示提示信息并记录索引
+            systemMessageIndex.value = chatMessages.value.length;
             chatMessages.value.push({ 
                 role: 'system', 
-                content: '⏳ 正在生成可保存的计划，请稍候...' 
+                content: '⏳ 正在生成可保存的计划，请稍候...',
+                isPolling: true
             });
+            
+            // 启动计时器
+            pollTimer.value = 0;
+            pollTimerInterval = setInterval(() => {
+                pollTimer.value++;
+                // 更新提示消息内容
+                if (systemMessageIndex.value >= 0 && chatMessages.value[systemMessageIndex.value]) {
+                    chatMessages.value[systemMessageIndex.value].content = 
+                        `<span class="spin-icon">⏳</span> 正在生成可保存的计划，请稍候... <span class="text-xs text-gray-500">${pollTimer.value}秒</span>`;
+                }
+            }, 1000);
             
             pollInterval = setInterval(async () => {
                 pollCount++;
@@ -504,20 +563,65 @@ createApp({
                     if (result.status === 'completed' && result.plan) {
                         console.log('[DEBUG] 计划JSON生成完成！', result.plan);
                         detectedPlan.value = result.plan;
+                        
+                        // 停止计时器
+                        if (pollTimerInterval) {
+                            clearInterval(pollTimerInterval);
+                            pollTimerInterval = null;
+                        }
+                        
+                        // 移除系统提示消息
+                        if (systemMessageIndex.value >= 0) {
+                            chatMessages.value.splice(systemMessageIndex.value, 1);
+                            systemMessageIndex.value = -1;
+                        }
+                        
                         clearInterval(pollInterval);
                         pollInterval = null;
                     } else if (result.status === 'failed') {
                         console.log('[DEBUG] 计划JSON生成失败');
+                        
+                        // 停止计时器
+                        if (pollTimerInterval) {
+                            clearInterval(pollTimerInterval);
+                            pollTimerInterval = null;
+                        }
+                        
+                        // 更新提示为失败消息
+                        if (systemMessageIndex.value >= 0 && chatMessages.value[systemMessageIndex.value]) {
+                            chatMessages.value[systemMessageIndex.value].content = '❌ 计划生成失败';
+                            chatMessages.value[systemMessageIndex.value].isPolling = false;
+                        }
+                        
                         clearInterval(pollInterval);
                         pollInterval = null;
                     } else if (pollCount >= maxPolls) {
                         console.log('[DEBUG] 轮询超时');
+                        
+                        // 停止计时器
+                        if (pollTimerInterval) {
+                            clearInterval(pollTimerInterval);
+                            pollTimerInterval = null;
+                        }
+                        
+                        // 更新提示为超时消息
+                        if (systemMessageIndex.value >= 0 && chatMessages.value[systemMessageIndex.value]) {
+                            chatMessages.value[systemMessageIndex.value].content = '⏱️ 生成超时，请重试';
+                            chatMessages.value[systemMessageIndex.value].isPolling = false;
+                        }
+                        
                         clearInterval(pollInterval);
                         pollInterval = null;
                     }
                 } catch (error) {
                     console.error('[DEBUG] 轮询出错:', error);
                     if (pollCount >= maxPolls) {
+                        // 停止计时器
+                        if (pollTimerInterval) {
+                            clearInterval(pollTimerInterval);
+                            pollTimerInterval = null;
+                        }
+                        
                         clearInterval(pollInterval);
                         pollInterval = null;
                     }
@@ -566,16 +670,35 @@ createApp({
                 return;
             }
             if (!confirm('使用模板「' + tpl.title + '」创建计划？')) return;
-            const data = await api('/api/plans/from_template', {
+            const data = await api('/api/plans/from-template', {
                 method: 'POST',
                 body: JSON.stringify({ template_id: tpl.id })
             });
             if (data.success) {
+                selectedTemplate.value = null; // 关闭详情弹窗
                 loadPlans();
                 currentTab.value = 'plans';
                 alert('计划创建成功！');
             } else {
                 alert(data.error || '创建失败');
+            }
+        };
+
+        const showTemplateDetail = (tpl) => {
+            selectedTemplate.value = tpl;
+            expandedTemplateDay.value = null; // 重置折叠状态
+        };
+
+        const toggleTemplateDay = (day) => {
+            expandedTemplateDay.value = expandedTemplateDay.value === day ? null : day;
+        };
+
+        const parseTemplateDays = (tpl) => {
+            try {
+                return JSON.parse(tpl.days_json || '[]');
+            } catch (e) {
+                console.error('解析模版数据失败:', e);
+                return [];
             }
         };
 
@@ -646,7 +769,7 @@ createApp({
             toggleDay, isDayChecked, getCheckinDate, canCheckin, canUndo, doCheckin, undoCheckin,
             chatMessages, chatInput, chatLoading, chatBox, detectedPlan, chatTimer, chatTimerInterval,
             sendChat, newChatSession, clearChat, savePlanFromChat, scrollChat,
-            templates, loadTemplates, useTemplate,
+            templates, selectedTemplate, expandedTemplateDay, loadTemplates, useTemplate, showTemplateDetail, toggleTemplateDay, parseTemplateDays,
             pwForm, resetForm, changePassword, resetPassword, renderMarkdown
         };
     }
