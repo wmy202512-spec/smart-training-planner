@@ -22,7 +22,7 @@
 - 📅 **卡片式进度** - 直观的卡片界面，按天展示训练内容
 - ✅ **打卡追踪** - 完成训练后打卡解锁，记录您的进步
 - 📊 **多用户支持** - 独立账户系统，每个人都有自己的训练计划
-- 🎯 **模板库** - 内置经典训练模板，快速开始您的健身之旅
+- 🎯 **模板库** - 内置经典训练模板，全屏详情页展示，可折叠卡片查看每日训练安排
 
 ## 🎯 适用场景
 
@@ -64,7 +64,7 @@
 
 5. **访问应用**
    
-   打开浏览器访问：`http://localhost:5100`
+   打开浏览器访问：`http://localhost:5051`
 
 ### 首次使用
 
@@ -117,7 +117,21 @@ smart-training-planner/
 
 ## 🔧 配置说明
 
-### 环境变量（可选）
+### LLM 配置（必需）
+
+在项目根目录创建 `.env` 文件，配置 LLM API：
+
+```bash
+# 复制示例文件
+cp .env.example .env
+
+# 编辑 .env 文件，填入您的配置
+LLM_BASE_URL=your_llm_api_endpoint
+LLM_API_KEY=your_api_key
+LLM_MODEL=your_model_name
+```
+
+### 其他环境变量（可选）
 
 ```bash
 # 自定义访问口令
@@ -125,16 +139,6 @@ export APP_PASSCODE="your_custom_passcode"
 
 # Flask 密钥
 export SECRET_KEY="your_secret_key"
-```
-
-### LLM 配置
-
-在 `app.py` 中修改 LLM 相关配置：
-
-```python
-LLM_BASE = "your_llm_api_endpoint"
-LLM_KEY = "your_api_key"
-LLM_MODEL = "your_model_name"
 ```
 
 ## 🤝 贡献
