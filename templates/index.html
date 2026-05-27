@@ -51,8 +51,8 @@ window.addEventListener("unhandledrejection", function(e) {
         <div class="bg-white rounded-2xl card-shadow p-8 w-full max-w-sm">
             <h1 class="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">运动训练助手</h1>
             <div class="flex mb-6 border-b">
-                <button @click="authMode='login'" :class="authMode==='login'?'border-b-2 border-purple-500 text-purple-600':'text-gray-400'" class="flex-1 pb-2 font-medium">登录</button>
-                <button @click="authMode='register'" :class="authMode==='register'?'border-b-2 border-purple-500 text-purple-600':'text-gray-400'" class="flex-1 pb-2 font-medium">注册</button>
+                <button @click="switchAuthMode('login')" :class="authMode==='login'?'border-b-2 border-purple-500 text-purple-600':'text-gray-400'" class="flex-1 pb-2 font-medium">登录</button>
+                <button @click="switchAuthMode('register')" :class="authMode==='register'?'border-b-2 border-purple-500 text-purple-600':'text-gray-400'" class="flex-1 pb-2 font-medium">注册</button>
             </div>
             <div v-if="authMode==='login'">
                 <input v-model="authForm.username" placeholder="用户名" class="w-full mb-3 px-4 py-3 rounded-lg border focus:outline-none focus:border-purple-400" @keyup.enter="doAuth">
@@ -62,7 +62,7 @@ window.addEventListener("unhandledrejection", function(e) {
             <div v-else>
                 <input v-model="authForm.username" placeholder="用户名" class="w-full mb-3 px-4 py-3 rounded-lg border focus:outline-none focus:border-purple-400">
                 <input v-model="authForm.nickname" placeholder="昵称（选填）" class="w-full mb-3 px-4 py-3 rounded-lg border focus:outline-none focus:border-purple-400">
-                <input v-model="authForm.password" type="password" placeholder="密码（至少4位）" class="w-full mb-3 px-4 py-3 rounded-lg border focus:outline-none focus:border-purple-400">
+                <input v-model="authForm.password" type="password" placeholder="密码（至少6位）" class="w-full mb-3 px-4 py-3 rounded-lg border focus:outline-none focus:border-purple-400">
                 <input v-model="authForm.password2" type="password" placeholder="确认密码" class="w-full mb-4 px-4 py-3 rounded-lg border focus:outline-none focus:border-purple-400">
                 <button @click="doAuth" class="w-full py-3 rounded-lg text-white font-medium btn-primary">注册</button>
             </div>
@@ -77,7 +77,7 @@ window.addEventListener("unhandledrejection", function(e) {
             <h1 class="text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">运动训练助手</h1>
             <div class="flex items-center gap-3">
                 <span class="text-sm text-gray-500">{{ nickname }}</span>
-                <button @click="showSettings=true" class="text-gray-400 hover:text-gray-600">
+                <button @click="showSettingsPage=true" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 </button>
             </div>
@@ -214,7 +214,10 @@ window.addEventListener("unhandledrejection", function(e) {
                             </button>
                         </div>
                         <div class="flex justify-between mt-2">
-                            <button @click="newChatSession" class="text-xs text-gray-400 hover:text-purple-500">+ 新对话</button>
+                            <button @click="newChatSession" class="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-medium rounded-full shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                新对话
+                            </button>
                             <button v-if="chatMessages.length>0" @click="clearChat" class="text-xs text-gray-400 hover:text-red-400">清空对话</button>
                         </div>
                     </div>
@@ -250,7 +253,10 @@ window.addEventListener("unhandledrejection", function(e) {
                             <h2 class="font-bold text-lg">{{ selectedTemplate.title }}</h2>
                             <p class="text-sm text-gray-500">{{ selectedTemplate.sport_type }} · {{ selectedTemplate.total_days }}天</p>
                         </div>
-                        <button @click="useTemplate(selectedTemplate)" class="text-purple-600 hover:text-purple-700 text-sm font-medium">使用模版</button>
+                        <button @click="useTemplate(selectedTemplate)" class="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 flex items-center gap-1.5">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            使用模版
+                        </button>
                     </div>
                     <p v-if="selectedTemplate.description" class="text-sm text-gray-600 mb-4 px-1">{{ selectedTemplate.description }}</p>
                     <div v-for="day in parseTemplateDays(selectedTemplate)" :key="day.day" class="bg-white rounded-xl card-shadow mb-3 overflow-hidden">
@@ -277,26 +283,73 @@ window.addEventListener("unhandledrejection", function(e) {
         </main>
 
         <!-- Settings Modal -->
-        <div v-if="showSettings" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" @click.self="showSettings=false">
-            <div class="bg-white rounded-2xl w-full max-w-sm p-6">
-                <h3 class="font-bold text-lg mb-4">设置</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-sm text-gray-500">修改密码</label>
-                        <input v-model="pwForm.oldPw" type="password" placeholder="当前密码" class="w-full mt-1 px-3 py-2 rounded-lg border text-sm">
-                        <input v-model="pwForm.newPw" type="password" placeholder="新密码（至少4位）" class="w-full mt-2 px-3 py-2 rounded-lg border text-sm">
-                        <button @click="changePassword" class="mt-2 px-4 py-2 bg-purple-500 text-white text-sm rounded-lg">确认修改</button>
+        <!-- Settings Page (Full Screen) -->
+        <div v-if="showSettingsPage" class="fixed inset-0 bg-gray-50 z-50 overflow-y-auto">
+            <div class="max-w-2xl mx-auto p-4">
+                <!-- Header -->
+                <div class="flex items-center mb-6">
+                    <button @click="showSettingsPage=false" class="mr-3 text-gray-500 hover:text-gray-700">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+                    <h2 class="font-bold text-xl">设置</h2>
+                </div>
+
+                <!-- 账户设置 -->
+                <div class="bg-white rounded-xl card-shadow p-5 mb-4">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-5 h-5 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <h3 class="font-bold text-gray-800">账户设置</h3>
                     </div>
-                    <div v-if="isAdmin" class="border-t pt-4">
-                        <label class="text-sm text-gray-500">管理员：重置用户密码</label>
-                        <input v-model="resetForm.username" placeholder="用户名" class="w-full mt-1 px-3 py-2 rounded-lg border text-sm">
-                        <input v-model="resetForm.newPw" placeholder="新密码（默认123456）" class="w-full mt-2 px-3 py-2 rounded-lg border text-sm">
-                        <button @click="resetPassword" class="mt-2 px-4 py-2 bg-red-500 text-white text-sm rounded-lg">重置密码</button>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm text-gray-600 block mb-1">当前用户</label>
+                            <div class="px-3 py-2 bg-gray-50 rounded-lg text-sm text-gray-700">{{ nickname }}</div>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-600 block mb-1">修改密码</label>
+                            <input v-model="pwForm.oldPw" type="password" placeholder="当前密码" class="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:border-purple-400 mb-2">
+                            <input v-model="pwForm.newPw" type="password" placeholder="新密码（至少6位）" class="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:border-purple-400">
+                            <button @click="changePassword" class="mt-3 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-medium rounded-lg shadow-sm hover:shadow-md transition-all">
+                                确认修改
+                            </button>
+                        </div>
                     </div>
-                    <div class="border-t pt-4 flex justify-between">
-                        <button @click="showSettings=false" class="px-4 py-2 text-gray-500 text-sm">关闭</button>
-                        <button @click="logout" class="px-4 py-2 text-red-500 text-sm">退出登录</button>
+                </div>
+
+                <!-- 界面设置（预留） -->
+                <!-- <div class="bg-white rounded-xl card-shadow p-5 mb-4">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-5 h-5 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                        <h3 class="font-bold text-gray-800">界面设置</h3>
                     </div>
+                    <div class="text-sm text-gray-400 text-center py-4">
+                        功能开发中...
+                    </div>
+                </div> -->
+
+                <!-- 管理员功能 -->
+                <div v-if="isAdmin" class="bg-white rounded-xl card-shadow p-5 mb-4">
+                    <div class="flex items-center mb-4">
+                        <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        <h3 class="font-bold text-gray-800">管理员功能</h3>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-sm text-gray-600 block mb-1">重置用户密码</label>
+                            <input v-model="resetForm.username" placeholder="用户名" class="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:border-red-400 mb-2">
+                            <input v-model="resetForm.newPw" placeholder="新密码（默认123456）" class="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none focus:border-red-400">
+                            <button @click="resetPassword" class="mt-3 px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg shadow-sm hover:shadow-md transition-all">
+                                重置密码
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 退出登录 -->
+                <div class="bg-white rounded-xl card-shadow p-5">
+                    <button @click="logout" class="w-full px-4 py-3 text-red-500 font-medium text-sm hover:bg-red-50 rounded-lg transition-colors">
+                        退出登录
+                    </button>
                 </div>
             </div>
         </div>
@@ -314,12 +367,22 @@ createApp({
         const isAdmin = ref(false);
         const nickname = ref('');
         const currentTab = ref('plans');
-        const showSettings = ref(false);
+        const showSettingsPage = ref(false);
 
         // Login/Register
         const authMode = ref('login');
         const authForm = reactive({ username: '', password: '', nickname: '', password2: '' });
         const authError = ref('');
+        
+        // Switch auth mode and clear form
+        const switchAuthMode = (mode) => {
+            authMode.value = mode;
+            authForm.username = '';
+            authForm.password = '';
+            authForm.nickname = '';
+            authForm.password2 = '';
+            authError.value = '';
+        };
 
         // Plans
         const plans = ref([]);
@@ -380,7 +443,7 @@ createApp({
             plans.value = [];
             selectedPlan.value = null;
             chatMessages.value = [];
-            showSettings.value = false;
+            showSettingsPage.value = false;
         };
 
         // Plans
@@ -704,8 +767,8 @@ createApp({
 
         // Settings
         const changePassword = async () => {
-            if (!pwForm.newPw || pwForm.newPw.length < 4) {
-                alert('新密码至少4位'); return;
+            if (!pwForm.newPw || pwForm.newPw.length < 6) {
+                alert('新密码至少6位'); return;
             }
             const data = await api('/api/user/password', {
                 method: 'POST',
@@ -763,8 +826,8 @@ createApp({
         });
 
         return {
-            token, isLoggedIn, isAdmin, nickname, currentTab, showSettings,
-            authMode, authForm, authError, doAuth, logout,
+            token, isLoggedIn, isAdmin, nickname, currentTab, showSettingsPage,
+            authMode, authForm, authError, switchAuthMode, doAuth, logout,
             plans, selectedPlan, expandedDay, loadPlans, selectPlan, confirmDeletePlan,
             toggleDay, isDayChecked, getCheckinDate, canCheckin, canUndo, doCheckin, undoCheckin,
             chatMessages, chatInput, chatLoading, chatBox, detectedPlan, chatTimer, chatTimerInterval,
