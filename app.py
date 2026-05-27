@@ -226,10 +226,18 @@ def register():
     username = data.get('username', '').strip()
     password = data.get('password', '').strip()
     nickname = data.get('nickname', '').strip() or username
+    
     if not username or not password:
         return jsonify({'error': '用户名和密码不能为空'}), 400
-    if len(password) < 4:
-        return jsonify({'error': '密码至少4位'}), 400
+    
+    # 校验用户名格式（只允许字母、数字、下划线）
+    import re
+    if not re.match(r'^[a-zA-Z0-9_]+$', username):
+        return jsonify({'error': '用户名只能包含字母、数字和下划线'}), 400
+    
+    if len(password) < 6:
+        return jsonify({'error': '密码至少6位'}), 400
+    
     db = get_db()
     try:
         existing = db.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()
@@ -860,4 +868,4 @@ def static_files(filename):
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=5051, debug=False)
+    app.run(host='0.0.0.0', port=5002, debug=False)

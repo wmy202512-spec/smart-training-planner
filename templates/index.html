@@ -60,7 +60,7 @@ window.addEventListener("unhandledrejection", function(e) {
                 <button @click="doAuth" class="w-full py-3 rounded-lg text-white font-medium btn-primary">登录</button>
             </div>
             <div v-else>
-                <input v-model="authForm.username" placeholder="用户名" class="w-full mb-3 px-4 py-3 rounded-lg border focus:outline-none focus:border-purple-400">
+                <input v-model="authForm.username" placeholder="用户名（字母、数字、下划线）" class="w-full mb-3 px-4 py-3 rounded-lg border focus:outline-none focus:border-purple-400">
                 <input v-model="authForm.nickname" placeholder="昵称（选填）" class="w-full mb-3 px-4 py-3 rounded-lg border focus:outline-none focus:border-purple-400">
                 <input v-model="authForm.password" type="password" placeholder="密码（至少6位）" class="w-full mb-3 px-4 py-3 rounded-lg border focus:outline-none focus:border-purple-400">
                 <input v-model="authForm.password2" type="password" placeholder="确认密码" class="w-full mb-4 px-4 py-3 rounded-lg border focus:outline-none focus:border-purple-400">
@@ -87,7 +87,7 @@ window.addEventListener("unhandledrejection", function(e) {
         <nav class="bg-white border-b flex px-4 sticky top-14 z-40">
             <button @click="currentTab='plans'" :class="currentTab==='plans'?'active':'text-gray-500'" class="nav-item flex-1 py-3 text-sm font-medium text-center">我的计划</button>
             <button @click="currentTab='chat'" :class="currentTab==='chat'?'active':'text-gray-500'" class="nav-item flex-1 py-3 text-sm font-medium text-center">AI教练</button>
-            <button @click="currentTab='templates'" :class="currentTab==='templates'?'active':'text-gray-500'" class="nav-item flex-1 py-3 text-sm font-medium text-center">模板</button>
+            <button @click="currentTab='templates'" :class="currentTab==='templates'?'active':'text-gray-500'" class="nav-item flex-1 py-3 text-sm font-medium text-center">计划模板</button>
         </nav>
 
         <!-- Content -->
@@ -235,7 +235,6 @@ window.addEventListener("unhandledrejection", function(e) {
                                 <p class="text-sm text-gray-500 mt-1">{{ tpl.sport_type }} · {{ tpl.total_days }}天</p>
                                 <p class="text-xs text-gray-400 mt-1">{{ tpl.description }}</p>
                             </div>
-                            <button @click.stop="useTemplate(tpl)" class="px-4 py-1.5 text-sm rounded-lg border border-purple-300 text-purple-600 hover:bg-purple-50 whitespace-nowrap flex-shrink-0 ml-3">使用</button>
                         </div>
                     </div>
                     <div v-if="templates.length===0" class="text-center py-12 text-gray-400">
@@ -417,6 +416,16 @@ createApp({
         // Auth
         const doAuth = async () => {
             authError.value = '';
+            
+            // 注册时校验用户名格式
+            if (authMode.value === 'register') {
+                const usernamePattern = /^[a-zA-Z0-9_]+$/;
+                if (!usernamePattern.test(authForm.username)) {
+                    authError.value = '用户名只能包含字母、数字和下划线';
+                    return;
+                }
+            }
+            
             if (authMode.value === 'register' && authForm.password !== authForm.password2) { authError.value = '两次密码不一致'; return; }
             if (!authForm.username || !authForm.password) { authError.value = '请填写用户名和密码'; return; }
             const url = authMode.value === 'login' ? '/api/login' : '/api/register';
@@ -601,7 +610,7 @@ createApp({
             systemMessageIndex.value = chatMessages.value.length;
             chatMessages.value.push({ 
                 role: 'system', 
-                content: '⏳ 正在生成可保存的计划，请稍候...',
+                content: '⏳ 正在将以上内容生成可保存的计划，请稍候... 如需调整，可继续对话修改',
                 isPolling: true
             });
             
@@ -689,7 +698,7 @@ createApp({
                         pollInterval = null;
                     }
                 }
-            }, 1000); // 每秒轮询一次
+            }, 2000); // 每2秒轮询一次
         };
 
         const scrollChat = () => {
